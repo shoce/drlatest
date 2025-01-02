@@ -1,11 +1,10 @@
 /*
 
+GoGet
 GoFmt
 GoBuildNull
 GoBuild
 
-go get -u -a -v
-go mod tidy
 */
 
 package main
