@@ -108,7 +108,7 @@ func main() {
 	for _, a := range args {
 
 		if u, err := url.Parse(a); err != nil {
-			log("ERROR docker.registry.repository.url parse: %v", err)
+			log("ERROR `%s` url parse: %v", a, err)
 			os.Exit(1)
 		} else {
 			if u.Scheme == "oci" {
