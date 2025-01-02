@@ -88,48 +88,64 @@ func main() {
 	all := flag.Bool("all", false, "to print all tags, otherwise only the last tag is printed")
 	full := flag.Bool("full", false, "to show full image address like registry/path:tag, otherwise only tag is printed")
 	flag.Parse()
-	if flag.NArg() != 1 || flag.Args()[0] == "" {
-		log("usage: drlatest docker.registry.repository.url")
-		os.Exit(1)
-	}
 
-	if u, err := url.Parse(flag.Args()[0]); err != nil {
-		log("ERROR docker.registry.repository.url parse: %v", err)
-		os.Exit(1)
-	} else {
-		if u.Scheme == "oci" {
-			u.Scheme = "https"
+	var args []string
+	for _, a := range flag.Args() {
+		if a != "" {
+			args = append(args, a)
 		}
-		RegistryUrl = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
-		RegistryHost = u.Host
-		RegistryRepository = u.Path
 	}
-	//log("DEBUG registry:%s repository:%s", RegistryUrl, RegistryRepository)
 
-	r := registry.NewInsecure(RegistryUrl, RegistryUsername, RegistryPassword)
-	r.Logf = registry.Quiet
-
-	tags, err := r.Tags(RegistryRepository)
-	if err != nil {
-		log("ERROR list tags: %v", err)
+	if len(args) < 1 {
+		log("usage: drlatest docker.registry.repository.url ...")
 		os.Exit(1)
 	}
 
-	sort.Sort(Versions(tags))
+	if len(args) > 1 {
+		*full = true
+	}
 
-	if *all {
-		for _, tag := range tags {
+	for _, a := range args {
+
+		if u, err := url.Parse(a); err != nil {
+			log("ERROR docker.registry.repository.url parse: %v", err)
+			os.Exit(1)
+		} else {
+			if u.Scheme == "oci" {
+				u.Scheme = "https"
+			}
+			RegistryUrl = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+			RegistryHost = u.Host
+			RegistryRepository = u.Path
+		}
+		//log("DEBUG registry:%s repository:%s", RegistryUrl, RegistryRepository)
+
+		r := registry.NewInsecure(RegistryUrl, RegistryUsername, RegistryPassword)
+		r.Logf = registry.Quiet
+
+		tags, err := r.Tags(RegistryRepository)
+		if err != nil {
+			log("ERROR list tags: %v", err)
+			os.Exit(1)
+		}
+
+		sort.Sort(Versions(tags))
+
+		if *all {
+			for _, tag := range tags {
+				if *full {
+					fmt.Printf("%s%s:%s"+NL, RegistryHost, RegistryRepository, tag)
+				} else {
+					fmt.Printf("%s"+NL, tag)
+				}
+			}
+		} else if len(tags) > 0 {
 			if *full {
-				fmt.Printf("%s%s:%s"+NL, RegistryHost, RegistryRepository, tag)
+				fmt.Printf("%s%s:%s"+NL, RegistryHost, RegistryRepository, tags[len(tags)-1])
 			} else {
-				fmt.Printf("%s"+NL, tag)
+				fmt.Printf("%s"+NL, tags[len(tags)-1])
 			}
 		}
-	} else if len(tags) > 0 {
-		if *full {
-			fmt.Printf("%s%s:%s"+NL, RegistryHost, RegistryRepository, tags[len(tags)-1])
-		} else {
-			fmt.Printf("%s"+NL, tags[len(tags)-1])
-		}
+
 	}
 }
