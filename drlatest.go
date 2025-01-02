@@ -88,7 +88,7 @@ func main() {
 	all := flag.Bool("all", false, "to print all tags, otherwise only the last tag is printed")
 	full := flag.Bool("full", false, "to show full image address like registry/path:tag, otherwise only tag is printed")
 	flag.Parse()
-	if flag.NArg() < 1 {
+	if flag.NArg() != 1 || flag.Args()[0] == "" {
 		log("usage: drlatest docker.registry.repository.url")
 		os.Exit(1)
 	}
