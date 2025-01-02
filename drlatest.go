@@ -42,13 +42,15 @@ var (
 
 func init() {
 	RegistryUsername = os.Getenv("RegistryUsername")
-	if RegistryUsername == "" {
-		log("warning: RegistryUsername env var empty")
-	}
 	RegistryPassword = os.Getenv("RegistryPassword")
-	if RegistryPassword == "" {
-		log("warning: RegistryPassword env var empty")
-	}
+	/*
+		if RegistryUsername == "" {
+			log("WARNING RegistryUsername env var empty")
+		}
+		if RegistryPassword == "" {
+			log("WARNING RegistryPassword env var empty")
+		}
+	*/
 }
 
 type Versions []string
@@ -92,21 +94,24 @@ func main() {
 	}
 
 	if u, err := url.Parse(flag.Args()[0]); err != nil {
-		log("error: docker.registry.repository.url parse: %v", err)
+		log("ERROR docker.registry.repository.url parse: %v", err)
 		os.Exit(1)
 	} else {
+		if u.Scheme == "oci" {
+			u.Scheme = "https"
+		}
 		RegistryUrl = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 		RegistryHost = u.Host
 		RegistryRepository = u.Path
 	}
-	//log("registry:%s repository:%s", RegistryUrl, RegistryRepository)
+	//log("DEBUG registry:%s repository:%s", RegistryUrl, RegistryRepository)
 
 	r := registry.NewInsecure(RegistryUrl, RegistryUsername, RegistryPassword)
 	r.Logf = registry.Quiet
 
 	tags, err := r.Tags(RegistryRepository)
 	if err != nil {
-		log("error: list tags: %v", err)
+		log("ERROR list tags: %v", err)
 		os.Exit(1)
 	}
 
